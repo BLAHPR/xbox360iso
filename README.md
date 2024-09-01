@@ -10,9 +10,4 @@ Requirements
 Usage
 ------------
 
-```python
-# Import Xbox360ISO and parse an ISO
-from xbox360iso import Xbox360ISO
-props = Xbox360ISO().parse("Portal 2.iso")
-if props:
-	print("Game: %s [%s]" % (props["game_name"], props["title_id"]))
+Added Changes to Code and Made More User Friendly. Now Just add iso's to a Folder Add this and Run. Now Creates Text File in Same Folder With Info Also Displays on Screen. Shows You the Original iso File Name Along with Actual xex Game Name Found in csv File. This can be Re-Run While Making Changes to the iso's in the Folder of Your Choosing.

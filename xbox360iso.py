@@ -1,78 +1,66 @@
-#
-# xbox360iso.py - Xbox 360 ISO / Xex Analysis & Extraction
-#
-# (c) 2014 Rob Lambell <rob[at]lambell.info>
-# This code is licensed under MIT license (see LICENSE for details)
-#
-
 import binascii
-import csv
 import io
-import os.path
+import os
 from struct import unpack
 import sys
-import urllib.request
-
+import csv
 
 class Xbox360ISO(object):
-    """
-    Parse an Xbox 360 ISO image and Xex file.
-    Related source code:
-    * abgx360.c of abgx360
-    * http://abgx360.net
-    """
-
     def __init__(self):
-        # root offset for types of xbox media
         self.iso_type = {'GDF': 0xfd90000,
                          'XGD3': 0x2080000,
                          'XSF': 0}
+        self.game_lookup = self.load_game_lookup()
 
-        self.csv_file = None
-        self.csv_settings = {'local': 'GameNameLookup.csv',
-                             'url': 'http://abgx360.net/Apps/Stealth360/GameNameLookup.csv',
-                             'force_update': False,
-                             'download_if_missing': True,
-                             'update_if_no_match': True,
-                             'min_age': 60 * 60 * 24}
+    def load_game_lookup(self):
+        game_lookup = {}
+        csv_file_path = os.path.join(os.getcwd(), 'xbox360_gamelist.csv')
+        if not os.path.isfile(csv_file_path):
+            print(f"CSV file not found: {csv_file_path}")
+            return game_lookup
+
+        try:
+            with open(csv_file_path, mode='r', newline='', encoding='utf-8') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    if len(row) > 1:
+                        game_name = row[0].strip()
+                        title_id = row[1].strip().upper()
+                        game_lookup[title_id] = game_name
+        except Exception as e:
+            print(f"Failed to read CSV file: {e}")
+
+        return game_lookup
 
     def parse(self, filename):
-        # open iso
-        iso_file = open(filename, "rb")
+        try:
+            with open(filename, "rb") as iso_file:
+                iso_info = self.check_iso(iso_file)
+                if iso_info is False:
+                    return None
 
-        # check iso is an xbox 360 game and record some details
-        iso_info = self.check_iso(iso_file)
-        if iso_info is False:
-            iso_file.close()
-            return False
+                xex_buffer = self.extract_defaultxex(iso_file, iso_info)
+                if xex_buffer is False:
+                    return None
 
-        # find and extract default.xex from the iso
-        xex_buffer = self.extract_defaultxex(iso_file, iso_info)
-        if xex_buffer is False:
-            iso_file.close()
-            return False
-        else:
-            iso_info['defaultxex'] = xex_buffer
+                xex_info = self.extract_xex_info(xex_buffer)
+                if xex_info is False:
+                    return None
 
-        # extract game details from default.xex
-        xex_info = self.extract_xex_info(xex_buffer)
-        if xex_info is False:
-            iso_file.close()
-            return False
+                # Fetch game name from the loaded game lookup dictionary
+                title_id = xex_info.get('title_id', 'Unknown')
+                xex_info['game_name'] = self.game_lookup.get(title_id, "Unknown")
 
-        # lookup the full game name
-        xex_info['game_name'] = self.media_id_to_game_name(xex_info['media_id'])
+                props = iso_info.copy()
+                props.update(xex_info)
 
-        props = iso_info.copy()
-        props.update(xex_info)
-
-        iso_file.close()
-        return props
+                return props
+        except Exception as e:
+            print(f"Failed to parse {filename}: {e}")
+            return None
 
     def check_iso(self, iso_file):
-        iso_info = {}
-
-        iso_info['sector_size'] = 0x800
+        iso_info = {'sector_size': 0x800}
         iso_file.seek((0x20 * iso_info['sector_size']))
         if iso_file.read(20).decode("ascii", "ignore") == 'MICROSOFT*XBOX*MEDIA':
             iso_info['root_offset'] = self.iso_type['XSF']
@@ -100,31 +88,24 @@ class Xbox360ISO(object):
 
     @staticmethod
     def extract_defaultxex(iso_file, iso_info):
-        # seek to root sector
         iso_file.seek((iso_info['root_dir_sector'] * iso_info['sector_size']) + iso_info['root_offset'])
-
-        # read the root sector into a bytes object
         root_sector_buffer = io.BytesIO()
         root_sector_buffer.write(iso_file.read(iso_info['root_dir_size']))
         root_sector_buffer.seek(0)
 
-        # case insensitive search of root sector for default.xex
         for i in range(0, iso_info['root_dir_size'] - 12):
             root_sector_buffer.seek(i)
-            root_sector_buffer.read(1)  # file_attribute
-            if int.from_bytes(root_sector_buffer.read(1), byteorder='big') == 11:  # 11 chars in filename
+            root_sector_buffer.read(1)
+            if int.from_bytes(root_sector_buffer.read(1), byteorder='big') == 11:
                 if root_sector_buffer.read(11).decode("ascii", "ignore").lower() == 'default.xex':
-                    # found default.xex
                     root_sector_buffer.seek(i - 8)
                     file_sector = unpack('I', root_sector_buffer.read(4))[0]
                     file_size = unpack('I', root_sector_buffer.read(4))[0]
 
-                    # seek to default.xex
                     iso_file.seek(iso_info['root_offset'] + (file_sector * iso_info['sector_size']))
-
-                    # read default.xex into a bytes object
                     xex_buffer = io.BytesIO()
                     xex_buffer.write(iso_file.read(file_size))
+                    xex_buffer.seek(0)
                     return xex_buffer
         print('default.xex not found')
         return False
@@ -135,27 +116,20 @@ class Xbox360ISO(object):
 
         xex_buffer.seek(0)
         if xex_buffer.read(4).decode("ascii", "ignore") == 'XEX2':
-
-            # get the starting address of code from 0x08 in the xex
             xex_buffer.seek(0x08)
             code_offset = unpack('>I', xex_buffer.read(4))[0]
-            # check if the code_offset is too large
             if code_offset > sys.getsizeof(xex_buffer):
                 print('Starting address of Xex code is beyond size of default.xex')
                 return False
 
-            # get the starting address of the xex certificate
             xex_buffer.seek(0x10)
             cert_offset = unpack('>I', xex_buffer.read(4))[0]
-            # check if the cert_offset is too large
             if cert_offset > code_offset:
                 print('Xex certificate offset is beyond the starting address of Xex code')
                 return False
 
-            # get the number of entries in the general info table
             xex_buffer.seek(0x14)
             info_table_num_entries = unpack('>I', xex_buffer.read(4))[0]
-            # check that there aren't too many entries
             if info_table_num_entries * 8 + 24 > code_offset:
                 print('Xex general info table has entries that spill over into the Xex code')
                 return False
@@ -163,7 +137,6 @@ class Xbox360ISO(object):
             execution_info_address = False
             execution_info_table_flags = bytes([0x00, 0x04, 0x00, 0x06])
 
-            # iterate through info table, finding addresses
             for i in range(0, info_table_num_entries):
                 header_id = unpack('>I', xex_buffer.read(4))[0]
 
@@ -172,7 +145,6 @@ class Xbox360ISO(object):
                 else:
                     xex_buffer.read(4)
 
-            # seek to each address and extract info
             if execution_info_address is not False:
                 xex_buffer.seek(execution_info_address)
                 xex_info['media_id'] = binascii.hexlify(xex_buffer.read(4)).decode("ascii", "ignore").upper()
@@ -191,47 +163,57 @@ class Xbox360ISO(object):
             print('XEX2 was not found at the start of default.xex')
             return False
 
-    def media_id_to_game_name(self, media_id):
-        # check if we've already loaded the csv
-        if self.csv_file is None:
-            if (self.csv_settings['force_update'] is True) or \
-               (self.csv_exists() is False and self.csv_settings['download_if_missing'] is True):
-                self.download_csv()
+def main():
+    iso_parser = Xbox360ISO()
+    current_dir = os.getcwd()
+    iso_files = [f for f in os.listdir(current_dir) if f.lower().endswith('.iso')]
 
-            if self.open_csv() is False:
-                return False
+    all_info = []
 
-            game_name = self.search_csv(media_id)
-            if game_name is not None:
-                return game_name
-            elif game_name is None and os.stat(self.csv_settings['local']).st_mtime > self.csv_settings['min_age']:
-                self.download_csv()
-                if self.open_csv() is False:
-                    return False
-                return self.search_csv(media_id)
+    print(f"Found {len(iso_files)} ISO(s) in {current_dir}\n")
 
-        return self.search_csv(media_id)
-
-    def csv_exists(self):
-        if os.path.isfile(self.csv_settings['local']):
-            return True
+    for iso in iso_files:
+        print(f"-> {iso}")
+        info = iso_parser.parse(iso)
+        if info:
+            # Add ISO file name to the info dictionary
+            info['iso_name'] = iso
+            all_info.append(info)
+            print(f"Game Name: {info.get('game_name', 'Unknown')}")
+            print(f"Media ID: {info.get('media_id', 'N/A')}")
+            print(f"Title ID: {info.get('title_id', 'N/A')}")
+            print(f"Disc Number: {info.get('disc_number', 'N/A')} of {info.get('disc_count', 'N/A')}")
+            print("-" * 40)
         else:
-            return False
+            print(f"Failed to process: {iso}")
+            print("-" * 40)
 
-    def download_csv(self):
-        urllib.request.urlretrieve(self.csv_settings['url'], self.csv_settings['local'])
+    if all_info:
+        base_filename = "GameInfo"
+        counter = 1
+        filename = f"{base_filename}.txt"
+        while os.path.isfile(filename):
+            filename = f"{base_filename}_{counter}.txt"
+            counter += 1
 
-    def open_csv(self):
-        if self.csv_exists():
-            self.csv_file = open(self.csv_settings['local'], 'r')
-        else:
-            return False
+        with open(filename, "w") as file:
+            for info in all_info:
+                file.write(f"-> {info.get('iso_name', 'Unknown')}\n")
+                file.write(f"Game Name: {info.get('game_name', 'Unknown')}\n")
+                file.write(f"Media ID: {info.get('media_id', 'N/A')}\n")
+                file.write(f"Title ID: {info.get('title_id', 'N/A')}\n")
+                file.write(f"Disc Number: {info.get('disc_number', 'N/A')} of {info.get('disc_count', 'N/A')}\n")
+                file.write("-" * 40 + "\n")
 
-    def search_csv(self, media_id):
-        self.csv_file.seek(0)
-        reader = csv.reader(self.csv_file, delimiter=',')
-        for row in reader:
-            for col in row:
-                if col.endswith(media_id):
-                    return row[0]
-        return None
+        print(f"Game information saved to {filename}")
+
+    print("Press Enter to Scan Again...")
+    input()  # Waits for user to press Enter
+
+if __name__ == "__main__":
+    while True:
+        try:
+            main()
+        except KeyboardInterrupt:
+            print("\nExiting...")
+            break

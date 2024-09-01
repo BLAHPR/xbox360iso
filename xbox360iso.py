@@ -5,22 +5,30 @@ from struct import unpack
 import sys
 import csv
 
+def get_data_file_path(filename):
+    if hasattr(sys, '_MEIPASS'):
+        # If running as a bundled executable
+        return os.path.join(sys._MEIPASS, filename)
+    else:
+        # If running as a script
+        return filename
+
 class Xbox360ISO(object):
     def __init__(self):
         self.iso_type = {'GDF': 0xfd90000,
                          'XGD3': 0x2080000,
                          'XSF': 0}
+        self.csv_file = get_data_file_path('xbox360_gamelist.csv')
         self.game_lookup = self.load_game_lookup()
 
     def load_game_lookup(self):
         game_lookup = {}
-        csv_file_path = os.path.join(os.getcwd(), 'xbox360_gamelist.csv')
-        if not os.path.isfile(csv_file_path):
-            print(f"CSV file not found: {csv_file_path}")
+        if not os.path.isfile(self.csv_file):
+            print(f"CSV file not found: {self.csv_file}")
             return game_lookup
 
         try:
-            with open(csv_file_path, mode='r', newline='', encoding='utf-8') as csvfile:
+            with open(self.csv_file, mode='r', newline='', encoding='utf-8') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
                     if len(row) > 1:

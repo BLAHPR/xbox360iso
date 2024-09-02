@@ -1,5 +1,6 @@
 Xbox360ISO
 ==========
+Latest exe Build (https://github.com/BLAHPR/xbox360iso/releases/latest)
 
 Xbox 360 ISO / Xex Analysis &amp; Extraction
 

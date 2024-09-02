@@ -3,9 +3,9 @@ Xbox360ISO
 
 Xbox 360 ISO / Xex Analysis &amp; Extraction
 
-Requirements
-------------
- * Python 3.x
+![Capture](https://github.com/user-attachments/assets/f597027b-7a88-4246-a8ca-0f8ea909c945)
+![Capture1](https://github.com/user-attachments/assets/da6e1449-ca61-40d2-93e3-9af47769a13b)
+![Capture2](https://github.com/user-attachments/assets/63438838-c800-420e-92c4-f8206409d175)
 
 Usage
 ------------

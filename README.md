@@ -18,5 +18,6 @@ Added Changes to Code and Made More User Friendly. Now Just add iso's to a Folde
 * Add More Info to Display
 
 ### Credits - Acknowledgements
-* @roblambell
-* @IronRingX
+* roblambell
+* IronRingX
+* UPX Team

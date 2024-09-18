@@ -30,11 +30,18 @@ class Xbox360ISO(object):
         try:
             with open(self.csv_file, mode='r', newline='', encoding='utf-8') as csvfile:
                 reader = csv.reader(csvfile)
+                headers = next(reader)  # Skip the header row
                 for row in reader:
-                    if len(row) > 1:
-                        game_name = row[0].strip()
-                        title_id = row[1].strip().upper()
-                        game_lookup[title_id] = game_name
+                    if len(row) > 7:
+                        game_lookup[row[1].strip().upper()] = {
+                            'game_name': row[0].strip(),
+                            'serial': row[2].strip(),
+                            'type': row[3].strip(),
+                            'region': row[4].strip(),
+                            'xex_crc': row[5].strip(),
+                            'media_id': row[6].strip(),
+                            'wave': row[7].strip()
+                       }
         except Exception as e:
             print(f"Failed to read CSV file: {e}")
 
@@ -55,9 +62,11 @@ class Xbox360ISO(object):
                 if xex_info is False:
                     return None
 
-                # Fetch game name from the loaded game lookup dictionary
+                # Fetch game info from the loaded game lookup dictionary
                 title_id = xex_info.get('title_id', 'Unknown')
-                xex_info['game_name'] = self.game_lookup.get(title_id, "Unknown")
+                game_info = self.game_lookup.get(title_id, {})
+                xex_info.update(game_info)
+                xex_info['title_id'] = title_id
 
                 props = iso_info.copy()
                 props.update(xex_info)
@@ -178,7 +187,7 @@ def main():
 
     all_info = []
 
-    print(f"Found {len(iso_files)} ISO(s) in {current_dir}\n")
+    print(f"By: blahpr 2024 -> https://github.com/BLAHPR/xbox360iso/releases/latest\n\nFound {len(iso_files)} ISO(s) in {current_dir}\n")
 
     for iso in iso_files:
         print(f"-> {iso}")
@@ -187,10 +196,15 @@ def main():
             # Add ISO file name to the info dictionary
             info['iso_name'] = iso
             all_info.append(info)
-            print(f"Game Name: {info.get('game_name', 'Unknown')}")
-            print(f"Media ID: {info.get('media_id', 'N/A')}")
-            print(f"Title ID: {info.get('title_id', 'N/A')}")
+            print(f"Game Name: {info.get('game_name', 'N/A')}")
             print(f"Disc Number: {info.get('disc_number', 'N/A')} of {info.get('disc_count', 'N/A')}")
+            print(f"Region: {info.get('region', 'N/A')}")
+            print(f"Title ID: {info.get('title_id', 'N/A')}")
+            print(f"Media ID: {info.get('media_id', 'N/A')}")
+            print(f"Wave: {info.get('wave', 'N/A')}")
+            print(f"Serial: {info.get('serial', 'N/A')}")
+            print(f"XEX CRC: {info.get('xex_crc', 'N/A')}")
+#Need Fix-> print(f"Type: {info.get('type', 'N/A')}")
             print("-" * 40)
         else:
             print(f"Failed to process: {iso}")
@@ -206,16 +220,24 @@ def main():
 
         with open(filename, "w") as file:
             for info in all_info:
-                file.write(f"-> {info.get('iso_name', 'Unknown')}\n")
-                file.write(f"Game Name: {info.get('game_name', 'Unknown')}\n")
-                file.write(f"Media ID: {info.get('media_id', 'N/A')}\n")
-                file.write(f"Title ID: {info.get('title_id', 'N/A')}\n")
+                file.write(f"-> {info.get('iso_name', 'N/A')}\n")
+                file.write(f"Game Name: {info.get('game_name', 'N/A')}\n")
                 file.write(f"Disc Number: {info.get('disc_number', 'N/A')} of {info.get('disc_count', 'N/A')}\n")
+                file.write(f"Region: {info.get('region', 'N/A')}\n")
+                file.write(f"Title ID: {info.get('title_id', 'N/A')}\n")
+                file.write(f"Media ID: {info.get('media_id', 'N/A')}\n")
+                file.write(f"Wave: {info.get('wave', 'N/A')}\n")
+                file.write(f"Serial: {info.get('serial', 'N/A')}\n")
+                file.write(f"XEX CRC: {info.get('xex_crc', 'N/A')}\n")
+    #Need Fix-> file.write(f"Type: {info.get('type', 'N/A')}\n")
                 file.write("-" * 40 + "\n")
 
-        print(f"Game information saved to {filename}")
+            # Write the additional text at the end of the file
+            file.write("\nBy: blahpr 2024 -> https://github.com/BLAHPR/xbox360iso/releases/latest\n")
 
-    print("Press Enter to Scan Again...")
+        print(f"Text Saved to {current_dir}\\{filename}")
+
+    print("\nPress Enter to Scan Again...")
     input()  # Waits for user to press Enter
 
 if __name__ == "__main__":

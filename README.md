@@ -5,9 +5,8 @@
 
 Xbox 360 ISO / Xex Analysis &amp; Extraction
 ![Capture](https://github.com/user-attachments/assets/d158b3e3-4bbb-4eaa-a2d3-2271a04f3bdb)
-![Capture](https://github.com/user-attachments/assets/c37f8b65-8d8a-486c-915e-406b70338474)
-![Capture1](https://github.com/user-attachments/assets/da6e1449-ca61-40d2-93e3-9af47769a13b)
 ![Capture](https://github.com/user-attachments/assets/a9533639-347b-4517-b84d-a3f4c7093bbd)
+![Capture](https://github.com/user-attachments/assets/c37f8b65-8d8a-486c-915e-406b70338474)
 
 Usage
 

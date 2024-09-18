@@ -15,9 +15,6 @@ Usage
 * Shows You the Original iso File Name Along with Actual xex Game Name Found in csv File.
 * This can be Re-Run While Making Changes to the iso's in the Folder of Your Choosing.
 
-### ToDo
-* Add More Info to Display
-
 ### Credits - Acknowledgements
 * roblambell
 * IronRingX

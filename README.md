@@ -4,13 +4,12 @@
 * Using UPX The Ultimate Packer for eXecutables (https://github.com/upx/upx)
 
 Xbox 360 ISO / Xex Analysis &amp; Extraction
-
-![Capture](https://github.com/user-attachments/assets/f597027b-7a88-4246-a8ca-0f8ea909c945)
+![Capture](https://github.com/user-attachments/assets/d158b3e3-4bbb-4eaa-a2d3-2271a04f3bdb)
+![Capture](https://github.com/user-attachments/assets/c37f8b65-8d8a-486c-915e-406b70338474)
 ![Capture1](https://github.com/user-attachments/assets/da6e1449-ca61-40d2-93e3-9af47769a13b)
-![Capture2](https://github.com/user-attachments/assets/63438838-c800-420e-92c4-f8206409d175)
+![Capture](https://github.com/user-attachments/assets/a9533639-347b-4517-b84d-a3f4c7093bbd)
 
 Usage
-
 
 * Added Changes to Code and Made More User Friendly.
 * Now Just add iso's to a Folder Add this and Run. Now Creates Text File in Same Folder With Info Also Displays on Screen.

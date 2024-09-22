@@ -1,7 +1,7 @@
 # Xbox360ISO - For Windows
 * Latest exe Build (https://github.com/BLAHPR/xbox360iso/releases/latest)
-
-Usage
+<br>
+Usage:
 * Added Changes to Code and Made More User Friendly.
 * Now Just add iso's to a Folder Add this and Run. Now Creates Text File in Same Folder With Info Also Displays on Screen.
 * Shows You the Original iso File Name Along with Actual xex Game Name Found in csv File.
@@ -19,3 +19,7 @@ Xbox 360 ISO Xex Analysis &amp; Extraction
 
 ### Anyone Can Make Changes As They See Fit. Like Change Stuff, Add Stuff, Dislike Stuff You Can Please Feel Free.
 * Using UPX The Ultimate Packer for eXecutables (https://github.com/upx/upx)
+<!-- Use &nbsp; for adding spaces between words -->
+<!-- Example: This&nbsp;&nbsp;&nbsp;is&nbsp;&nbsp;&nbsp;a&nbsp;&nbsp;&nbsp;test. -->
+<!-- Use <br> for adding a line break similar to pressing enter for new line -->
+<!-- Example: This is the first line.<br>This is the second line. -->

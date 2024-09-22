@@ -1,7 +1,5 @@
 # Xbox360ISO - For Windows
-### Anyone Can Make Changes As They See Fit. Like Change Stuff, Add Stuff, Dislike Stuff You Can Please Feel Free.
 * Latest exe Build (https://github.com/BLAHPR/xbox360iso/releases/latest)
-* Using UPX The Ultimate Packer for eXecutables (https://github.com/upx/upx)
 
 Xbox 360 ISO / Xex Analysis &amp; Extraction
 ![Capture](https://github.com/user-attachments/assets/d158b3e3-4bbb-4eaa-a2d3-2271a04f3bdb)
@@ -19,3 +17,6 @@ Usage
 * roblambell
 * IronRingX
 * UPX Team
+
+### Anyone Can Make Changes As They See Fit. Like Change Stuff, Add Stuff, Dislike Stuff You Can Please Feel Free.
+* Using UPX The Ultimate Packer for eXecutables (https://github.com/upx/upx)
